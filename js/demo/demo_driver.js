@@ -11,6 +11,7 @@
             self.requestObj = $.ajax({
                     url: urlFactory()
                 }).done(function(response) {
+console.log(response);
                     $(self).trigger("stateFetchingSuccess", {
                         result: response
                     });
@@ -55,8 +56,8 @@
         df2 = new DataFetcher(function() {
             return "/traffic_status";
         });
-
-	function Graph(){
+/*
+	function GraphD3(){
 		this.initialize = function(){
 			this.svg = d3.select("svg");
 			this.width = +this.svg.attr("width");
@@ -131,25 +132,42 @@
 		}
 	};
 
-	graph = new Graph();
-	graph.initialize();
+	graph = new GraphD3();
+	graph.initialize();*/
+
+	function Graph(){
+		this.parse = function(data){
+			this.nodes = {};
+			this.edges = [];
+			var graph = this;
+			data.forEach(function(element){
+				graph.nodes[element.srcObj] = element.srcType;
+				graph.nodes[element.destObj] = element.destType;
+				graph.edges.push(element);
+			});
+		};
+	};
 
     $(df2).on({
         "stateFetchingSuccess": function(event, data) {
-			d3.json("miserables.json", function(error, graph2) {
+			graph = new Graph();
+			graph.parse(data.result.data);
+
+			/*d3.json("miserables.json", function(error, graph2) {
 				graph.addData(graph2);
-			});
-            data.result.data.forEach(function(dataEntry) {
-                addNewEntry($trafficStatusList, JSON.stringify(dataEntry));
-            });
+			});*/
+			//console.log(data.result.data);
+            //data.result.data.forEach(function(dataEntry) {
+            //    addNewEntry($trafficStatusList, JSON.stringify(dataEntry));
+            //});
         },
         "stateFetchingFailure": function(event, data) {
-            addNewEntry($trafficStatusList, JSON.stringify(data.error));
-            addNewEntry($trafficStatusList, "Hit a snag. Retry after 1 sec...");
-            setTimeout(function() {
-                $trafficStatusList.html("");
-                df2.repeatOnce();
-            }, 1000);
+            //addNewEntry($trafficStatusList, JSON.stringify(data.error));
+            //addNewEntry($trafficStatusList, "Hit a snag. Retry after 1 sec...");
+            //setTimeout(function() {
+            //    $trafficStatusList.html("");
+            //    df2.repeatOnce();
+            //}, 1000);
         }
     });
 
