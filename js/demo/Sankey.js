@@ -1,6 +1,6 @@
 'use strict';
 
-//some code borrowed from here http://bl.ocks.org/Neilos/584b9a5d44d5fe00f779
+//code borrowed from here http://bl.ocks.org/Neilos/584b9a5d44d5fe00f779 and modified it as needed
 
 var svg, tooltip, biHiSankey, path, defs, colorScale, highlightColorScale, isTransitioning;
 
@@ -12,7 +12,7 @@ var OPACITY = {
     LINK_FADED: 0.05,
     LINK_HIGHLIGHT: 0.9
   },
-  TYPES = ["Asset", "Expense", "Revenue", "Equity", "Liability"],
+  TYPES = ["A", "B", "C"],
   TYPE_COLORS = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d"],
   TYPE_HIGHLIGHT_COLORS = ["#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854", "#ffd92f", "#e5c494"],
   LINK_COLOR = "#b3b3b3",
@@ -38,7 +38,7 @@ var OPACITY = {
 
 var formatNumber = function (d) {
   var numberFormat = d3.format(",.0f"); // zero decimal places
-  return "£" + numberFormat(d);
+  return numberFormat(d);
 },
 
 formatFlow = function (d) {
@@ -383,6 +383,12 @@ function update () {
         })
         .style("fill-opacity", OPACITY.LINK_DEFAULT);
 
+		  function visible(linkCollection) {
+			return linkCollection.filter(function (link) {
+			  return link.source.state === "collapsed" && link.target.state === "collapsed";
+			});
+		  }
+
       tooltip
         .style("left", g.x + MARGIN.LEFT + "px")
         .style("top", g.y + g.height + MARGIN.TOP + 15 + "px")
@@ -391,7 +397,9 @@ function update () {
           .style("opacity", 1).select(".value")
           .text(function () {
             var additionalInstructions = g.children.length ? "\n(Double click to expand)" : "";
-            return g.name + "\nNet flow: " + formatFlow(g.netFlow) + additionalInstructions;
+			console.log(g);
+            return g.name + "\nInflow: " + d3.sum(visible(g.targetLinks), function(link){return link.value;})
+							+ " Outflow: " + d3.sum(visible(g.sourceLinks), function(link){return link.value;}) + additionalInstructions;
           });
     }
   });
@@ -502,13 +510,13 @@ function update () {
   collapser.exit().remove();
 
 }
-
+/*
 d3.queue()
 .defer(d3.json, "examplenodes.json")
 .defer(d3.json, "examplelinks.json")
 .await(function (error, exampleNodes, exampleLinks) {
-	console.log(exampleNodes);
-	console.log(exampleLinks);
+//	console.log(exampleNodes);
+//	console.log(exampleLinks);
 	biHiSankey
 	  .nodes(exampleNodes)
 	  .links(exampleLinks)
@@ -522,4 +530,4 @@ d3.queue()
 	update();
 });
 
-
+*/

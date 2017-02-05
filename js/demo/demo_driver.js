@@ -11,7 +11,6 @@
             self.requestObj = $.ajax({
                     url: urlFactory()
                 }).done(function(response) {
-console.log(response);
                     $(self).trigger("stateFetchingSuccess", {
                         result: response
                     });
@@ -137,14 +136,37 @@ console.log(response);
 
 	function Graph(){
 		this.parse = function(data){
-			this.nodes = {};
-			this.edges = [];
+			var nodes = {};
 			var graph = this;
+			graph.edges = [];
+			var types = new Set();
 			data.forEach(function(element){
-				graph.nodes[element.srcObj] = element.srcType;
-				graph.nodes[element.destObj] = element.destType;
-				graph.edges.push(element);
+				nodes[element.srcObj] = element.srcType;
+				nodes[element.destObj] = element.destType;
+				graph.edges.push({"source": element.srcObj,
+								"target": element.destObj,
+								"value": element.traffic});
+				types.add(element.srcType);
+				types.add(element.destType);
 			});
+			var len = Object.keys(nodes).length;
+			var typemap = {}, i = 1;
+			for (let elem of types){
+//				for(var elem in types){
+				typemap[elem] = len+i;
+				i++;
+			}
+			this.nodes = [];
+			for(var id in nodes){
+				if (nodes.hasOwnProperty(id)) {
+					this.nodes.push({"type" : nodes[id], "id" : id, "parent" : typemap[nodes[id]], "name" : id});
+				}
+			}
+			for(var type in typemap){
+				if (typemap.hasOwnProperty(type)) {
+					this.nodes.push({"type" : type, "id" : typemap[type], "parent" : null, "name" : type});
+				}
+			}
 		};
 	};
 
@@ -153,21 +175,25 @@ console.log(response);
 			graph = new Graph();
 			graph.parse(data.result.data);
 
-			/*d3.json("miserables.json", function(error, graph2) {
-				graph.addData(graph2);
-			});*/
-			//console.log(data.result.data);
-            //data.result.data.forEach(function(dataEntry) {
-            //    addNewEntry($trafficStatusList, JSON.stringify(dataEntry));
-            //});
+				biHiSankey
+				  .nodes(graph.nodes)
+				  .links(graph.edges)
+				  .initializeNodes(function (node) {
+						node.state = node.parent ? "contained" : "collapsed";
+				  })
+				  .layout(LAYOUT_INTERATIONS);
+				disableUserInterractions(2 * TRANSITION_DURATION);
+				update();
+
         },
         "stateFetchingFailure": function(event, data) {
-            //addNewEntry($trafficStatusList, JSON.stringify(data.error));
-            //addNewEntry($trafficStatusList, "Hit a snag. Retry after 1 sec...");
-            //setTimeout(function() {
-            //    $trafficStatusList.html("");
-            //    df2.repeatOnce();
-            //}, 1000);
+			console.log("failure");
+            addNewEntry($trafficStatusList, JSON.stringify(data.error));
+            addNewEntry($trafficStatusList, "Hit a snag. Retry after 1 sec...");
+            setTimeout(function() {
+                $trafficStatusList.html("");
+                df2.repeatOnce();
+            }, 1000);
         }
     });
 
