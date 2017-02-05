@@ -507,6 +507,8 @@ d3.queue()
 .defer(d3.json, "examplenodes.json")
 .defer(d3.json, "examplelinks.json")
 .await(function (error, exampleNodes, exampleLinks) {
+	console.log(exampleNodes);
+	console.log(exampleLinks);
 	biHiSankey
 	  .nodes(exampleNodes)
 	  .links(exampleLinks)
