@@ -8,7 +8,7 @@ Salient points about this chart are:
 
 The network shows traffic and packets per link and per node. Each object is one of four types and the initial visualization is provided by aggregting all objects of same type (Therefore maximum 4 nodes).
 
-Double clicking the type node will split all the objects in that type and one may inpect more detailed network stats. The resulting circle generated previously indicating the type may be again double clicked to show aggregated node.
+Double clicking the type node will split all the objects in that type and one may inpect more detailed network stats. The resulting circle (generated previously indicating the type) may be again double clicked to show aggregated node.
 
 All the nodes (type or object) can be dragged in x-y direction so as to provide a better picture.
 
