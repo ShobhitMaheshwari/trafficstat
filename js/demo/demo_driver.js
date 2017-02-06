@@ -170,6 +170,7 @@
 
     $(df2).on({
         "stateFetchingSuccess": function(event, data) {
+			d3.select("#error").remove();
 			graph.parse(data.result.data);
 			graph2 = jQuery.extend(true, {}, graph);
 			clearchart();
@@ -188,6 +189,14 @@
 				toggle();
         },
         "stateFetchingFailure": function(event, data) {
+			if(d3.select("#error").empty()){
+				res["svg"].append("text")
+					.attr("x", 50)
+					.attr("y", 10)
+					.attr("id", "error")
+					.attr("dy", ".35em")
+					.text(function(d) { return "Hit a snag. Retry after 1 sec..."; });
+			}
 			console.log("failure");
             //addNewEntry($trafficStatusList, JSON.stringify(data.error));
             //addNewEntry($trafficStatusList, "Hit a snag. Retry after 1 sec...");
