@@ -1,5 +1,121 @@
 'use strict';
 (function () {
+		function d3CheckBox () {//taken from https://bl.ocks.org/Lulkafe/c77a36d5efb603e788b03eb749a4a714 and modified
+
+		var size = 20,
+		    x = 0,
+		    y = 0,
+		    rx = 0,
+		    ry = 0,
+		    markStrokeWidth = 3,
+		    boxStrokeWidth = 3,
+		    checked = false,
+		    clickEvent;
+
+		function checkBox (selection) {
+
+		    var g = selection.append("g"),
+		        box = g.append("rect")
+		        .attr("width", size)
+		        .attr("height", size)
+		        .attr("x", x)
+		        .attr("y", y)
+		        .attr("rx", rx)
+		        .attr("ry", ry)
+		        .style({
+		            "fill-opacity": 0,
+		            "stroke-width": boxStrokeWidth,
+		            "stroke": "black"
+		        });
+				g.append("text").attr("x", "730px").attr("y", 75)
+				.text(function(d) { return "Frozen"; });
+
+		    //Data to represent the check mark
+		    var coordinates = [
+		        {x: x + (size / 8), y: y + (size / 3)},
+		        {x: x + (size / 2.2), y: (y + size) - (size / 4)},
+		        {x: (x + size) - (size / 8), y: (y + (size / 10))}
+		    ];
+
+		    var line = d3.svg.line()
+		            .x(function(d){ return d.x; })
+		            .y(function(d){ return d.y; })
+		            .interpolate("basic");
+
+		    var mark = g.append("path")
+		        .attr("d", line(coordinates))
+		        .style({
+		            "stroke-width" : markStrokeWidth,
+		            "stroke" : "black",
+		            "fill" : "none",
+		            "opacity": (checked)? 1 : 0
+		        });
+
+		    g.on("click", function () {
+		        checked = !checked;
+		        mark.style("opacity", (checked)? 1 : 0);
+
+		        if(clickEvent)
+		            clickEvent();
+
+		        d3.event.stopPropagation();
+		    });
+
+		}
+
+		checkBox.size = function (val) {
+		    size = val;
+		    return checkBox;
+		}
+
+		checkBox.x = function (val) {
+		    x = val;
+		    return checkBox;
+		}
+
+		checkBox.y = function (val) {
+		    y = val;
+		    return checkBox;
+		}
+
+		checkBox.rx = function (val) {
+		    rx = val;
+		    return checkBox;
+		}
+
+		checkBox.ry = function (val) {
+		    ry = val;
+		    return checkBox;
+		}
+
+		checkBox.markStrokeWidth = function (val) {
+		    markStrokeWidth = val;
+		    return checkBox;
+		}
+
+		checkBox.boxStrokeWidth = function (val) {
+		    boxStrokeWidth = val;
+		    return checkBox;
+		}
+
+		checkBox.checked = function (val) {
+
+		    if(val === undefined) {
+		        return checked;
+		    } else {
+		        checked = val;
+		        return checkBox;
+		    }
+		}
+
+		checkBox.clickEvent = function (val) {
+		    clickEvent = val;
+		    return checkBox;
+		}
+
+		return checkBox;
+	}
+
     function DataFetcher(urlFactory, delay) {
         var self = this;
 
@@ -55,6 +171,9 @@
     var $trafficStatusList = $("#mockTrafficStat"),
         df2 = new DataFetcher(function() {
             return "/traffic_status";
+        }),
+		df1 = new DataFetcher(function() {
+            return "/traffic_status/frozen";
         });
 
 	function Graph(){
@@ -97,7 +216,6 @@
 		};
 	};
 
-	var graph = new Graph();
 	var graph2;
 	var res = initialize();
 
@@ -136,6 +254,10 @@
 		var switchListener = svg.select("#" + demoSwitch.id)
 			.on("click", function() {
 				sP.swtch.toggleSwitch(svg,demoSwitch, {oW:1,aR:1,oH:1,nW:2,nH:1}) // again not passing any pym info in will default to 1.
+				if(d3.select(this).attr("swpos") == "left")
+					d3.select(this).attr("swpos", "right");
+				else
+					d3.select(this).attr("swpos", "left");
 				clearchart();
 				var biHiSankey = create_biHiSankey();
 				var tempgraph = jQuery.extend(true, {}, graph2);
@@ -163,32 +285,67 @@
 					disableUserInterractions(2 * TRANSITION_DURATION);
 					update(biHiSankey, res["svg"], res["tooltip"], colorScale, highlightColorScale, "Mb/s");
 				}
+			});
 
-
+		var checkBox = new d3CheckBox();
+		var frozen = false;
+		checkBox.x(700).y(60).checked(false)
+			.clickEvent(function(){
+				frozen = !frozen;
+			});
+		res["svg"].call(checkBox);
+		var button = res["svg"].append("g").attr("transform", function(d, i) { return "translate(790,60)"; });
+		button.append("rect").attr("x", 0).attr("y", 0).attr("width", 70).attr("height", 30).attr("fill", "rgba(59, 176, 132, 0.498039)").style("stroke", "rgb(35, 35, 35)").style("stroke-width", 3).attr("ry", 6);
+		button.append("text").attr("x", 35).attr("y", 18).attr("text-anchor", "middle").text("Refresh");
+		button.on({
+			      "mouseover": function(d) {
+				        d3.select(this).style("cursor", "pointer")
+			      },
+			      "mouseout": function(d) {
+				        d3.select(this).style("cursor", "default")
+			      },
+				"click": function(){
+				    df2.start();
+				}
 			});
 	};
+	toggle();
 
     $(df2).on({
         "stateFetchingSuccess": function(event, data) {
 			d3.select("#error").remove();
+			var graph = new Graph();
 			graph.parse(data.result.data);
 			graph2 = jQuery.extend(true, {}, graph);
 			clearchart();
 				var biHiSankey = create_biHiSankey();
-				biHiSankey
-				  .nodes(graph.nodes)
-				  .links(graph.trafficedges)
-				  .initializeNodes(function (node) {
-						node.state = node.parent ? "contained" : "collapsed";
-				  })
-				  .layout(LAYOUT_INTERATIONS);
+
+				if(res["svg"].select("#deomswitch").attr("swpos") == "left"){
+					biHiSankey
+					  .nodes(graph.nodes)
+					  .links(graph.trafficedges)
+					  .initializeNodes(function (node) {
+							node.state = node.parent ? "contained" : "collapsed";
+					  })
+					  .layout(LAYOUT_INTERATIONS);
+					console.log("traffic");
+				}else{
+					biHiSankey
+					  .nodes(graph.nodes)
+					  .links(graph.packetedges)
+					  .initializeNodes(function (node) {
+							node.state = node.parent ? "contained" : "collapsed";
+					  })
+					  .layout(LAYOUT_INTERATIONS);
+					console.log("packet");
+				}
 				disableUserInterractions(2 * TRANSITION_DURATION);
 				var colorScale = d3.scale.ordinal().domain(graph.types).range(TYPE_COLORS);
  				var highlightColorScale = d3.scale.ordinal().domain(graph.types).range(TYPE_HIGHLIGHT_COLORS);
-				update(biHiSankey, res["svg"], res["tooltip"], colorScale, highlightColorScale, "Mb/s");
-				toggle();
+				update(biHiSankey, res["svg"], res["tooltip"], colorScale, highlightColorScale, res["svg"].select("#deomswitch").attr("swpos") == "left" ? "Mb/s" : "packets");
         },
         "stateFetchingFailure": function(event, data) {
+			clearchart();
 			if(d3.select("#error").empty()){
 				res["svg"].append("text")
 					.attr("x", 50)
@@ -202,9 +359,16 @@
             //addNewEntry($trafficStatusList, "Hit a snag. Retry after 1 sec...");
             setTimeout(function() {
                 $trafficStatusList.html("");
-                df2.repeatOnce();
+				if(frozen)
+	                df1.repeatOnce();
+				else
+	                df2.repeatOnce();
             }, 1000);
         }
     });
-    df2.start();
+
+	if(frozen)
+		df1.start();
+	else
+		df2.start();
 })();
