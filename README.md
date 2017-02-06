@@ -2,6 +2,8 @@
 
 Sankey diagram for visualizing traffic in a network (based on http://bl.ocks.org/Neilos/584b9a5d44d5fe00f779)
 
+The chart can be visualized here https://shobhitmaheshwari.github.io/trafficstat/
+
 Salient points about this chart are:
 
 The network shows traffic and packets per link and per node. Each object is one of four types and the initial visualization is provided by aggregting all objects of same type (Therefore maximum 4 nodes).
