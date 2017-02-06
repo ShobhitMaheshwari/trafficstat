@@ -237,6 +237,7 @@
 		return biHiSankey;
 	};
 
+	var frozen = false;
 	function toggle(){
 		var svg = d3.select("svg g");
 		var demoSwitch = {
@@ -288,7 +289,7 @@
 			});
 
 		var checkBox = new d3CheckBox();
-		var frozen = false;
+
 		checkBox.x(700).y(60).checked(false)
 			.clickEvent(function(){
 				frozen = !frozen;
@@ -305,14 +306,20 @@
 				        d3.select(this).style("cursor", "default")
 			      },
 				"click": function(){
-				    df2.start();
+					if(frozen){
+						console.log("frozen");
+						df1.start();
+					}
+					else{
+						console.log("Not frozen");
+					    df2.start();
+					}
 				}
 			});
 	};
 	toggle();
 
-    $(df2).on({
-        "stateFetchingSuccess": function(event, data) {
+	function stateFetchingSuccess(event, data){
 			d3.select("#error").remove();
 			var graph = new Graph();
 			graph.parse(data.result.data);
@@ -343,8 +350,9 @@
 				var colorScale = d3.scale.ordinal().domain(graph.types).range(TYPE_COLORS);
  				var highlightColorScale = d3.scale.ordinal().domain(graph.types).range(TYPE_HIGHLIGHT_COLORS);
 				update(biHiSankey, res["svg"], res["tooltip"], colorScale, highlightColorScale, res["svg"].select("#deomswitch").attr("swpos") == "left" ? "Mb/s" : "packets");
-        },
-        "stateFetchingFailure": function(event, data) {
+	}
+
+	function stateFetchingFailure(event, data){
 			clearchart();
 			if(d3.select("#error").empty()){
 				res["svg"].append("text")
@@ -359,16 +367,33 @@
             //addNewEntry($trafficStatusList, "Hit a snag. Retry after 1 sec...");
             setTimeout(function() {
                 $trafficStatusList.html("");
-				if(frozen)
+				if(frozen){
 	                df1.repeatOnce();
-				else
+					console.log("frozen");
+				}
+				else{
 	                df2.repeatOnce();
+					console.log("Not frozen");
+				}
             }, 1000);
-        }
+	}
+
+    $(df2).on({
+        "stateFetchingSuccess": stateFetchingSuccess,
+        "stateFetchingFailure": stateFetchingFailure
     });
 
-	if(frozen)
+    $(df1).on({
+        "stateFetchingSuccess": stateFetchingSuccess,
+        "stateFetchingFailure": stateFetchingFailure
+    });
+
+	if(frozen){
 		df1.start();
-	else
+		console.log("frozen");
+	}
+	else{
 		df2.start();
+		console.log("Not frozen");
+	}
 })();
