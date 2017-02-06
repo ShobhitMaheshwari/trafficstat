@@ -41,11 +41,6 @@ var formatNumber = function (d) {
   return numberFormat(d);
 },
 
-formatFlow = function (d) {
-  var flowFormat = d3.format(",.0f"); // zero decimal places with sign
-  return "£" + flowFormat(Math.abs(d)) + (d < 0 ? " CR" : " DR");
-},
-
 // Used when temporarily disabling user interractions to allow animations to complete
 disableUserInterractions = function (time) {
   isTransitioning = true;
