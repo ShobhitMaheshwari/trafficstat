@@ -29,3 +29,23 @@
   white-space: pre-line;
   margin: 0;
 }
+
+#mainFrame
+{
+	position: relative;
+	width: 550px;
+	height: 550px;
+	margin: 0 auto;
+}
+
+.noselect {
+	cursor: pointer;
+
+	-webkit-touch-callout: none; /* iOS Safari */
+  	-webkit-user-select: none;   /* Chrome/Safari/Opera */
+  	-khtml-user-select: none;    /* Konqueror */
+  	-moz-user-select: none;      /* Firefox */
+  	-ms-user-select: none;       /* IE/Edge */
+  	user-select: none;           /* non-prefixed version, currently
+                                  not supported by any browser */
+}

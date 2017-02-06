@@ -1,3 +1,4 @@
+'use strict';
 (function () {
     function DataFetcher(urlFactory, delay) {
         var self = this;
@@ -55,104 +56,29 @@
         df2 = new DataFetcher(function() {
             return "/traffic_status";
         });
-/*
-	function GraphD3(){
-		this.initialize = function(){
-			this.svg = d3.select("svg");
-			this.width = +this.svg.attr("width");
-			this.height = +this.svg.attr("height");
-
-			this.color = d3.scaleOrdinal(d3.schemeCategory20);
-
-			this.simulation = d3.forceSimulation()
-				.force("link", d3.forceLink().id(function(d) { return d.id; }))
-				.force("charge", d3.forceManyBody())
-				.force("center", d3.forceCenter(this.width/2, this.height/2));
-		};
-		this.addData = function(graph){
-			var link = this.svg.append("g")
-				.attr("class", "links")
-				.selectAll("line")
-				.data(graph.links)
-				.enter().append("line")
-				  .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
-
-			var color = this.color;
-			var node = this.svg.append("g")
-				  .attr("class", "nodes")
-				.selectAll("circle")
-				.data(graph.nodes)
-				.enter().append("circle")
-				  .attr("r", 5)
-				  .attr("fill", function(d) { return color(d.group); })
-				  .call(d3.drag()
-					  .on("start", this.dragstarted)
-					  .on("drag", this.dragged)
-					  .on("end", this.dragended));
-
-			  node.append("title")
-				  .text(function(d) { return d.id; });
-
-			this.simulation
-				  .nodes(graph.nodes)
-				  .on("tick", ticked);
-
-			this.simulation.force("link")
-				.links(graph.links);
-
-			function ticked() {
-				link
-					.attr("x1", function(d) { return d.source.x; })
-					.attr("y1", function(d) { return d.source.y; })
-					.attr("x2", function(d) { return d.target.x; })
-					.attr("y2", function(d) { return d.target.y; });
-
-				node
-					.attr("cx", function(d) { return d.x; })
-					.attr("cy", function(d) { return d.y; });
-			}
-		};
-
-		this.dragstarted = function (d) {
-		  if (!d3.event.active) this.simulation.alphaTarget(0.3).restart();
-		  d.fx = d.x;
-		  d.fy = d.y;
-		}
-
-		this.dragged = function (d) {
-		  d.fx = d3.event.x;
-		  d.fy = d3.event.y;
-		}
-
-		this.dragended = function (d) {
-		  if (!d3.event.active) this.simulation.alphaTarget(0);
-		  d.fx = null;
-		  d.fy = null;
-		}
-	};
-
-	graph = new GraphD3();
-	graph.initialize();*/
 
 	function Graph(){
 		this.parse = function(data){
 			var nodes = {};
 			var graph = this;
-			graph.edges = [];
+			graph.trafficedges = [];
+			graph.packetedges = [];
 			var types = new Set();
 			data.forEach(function(element){
 				nodes[element.srcObj] = element.srcType;
 				nodes[element.destObj] = element.destType;
-				graph.edges.push({"source": element.srcObj,
+				graph.trafficedges.push({"source": element.srcObj,
 								"target": element.destObj,
 								"value": element.traffic});
+				graph.packetedges.push({"source": element.srcObj,
+								"target": element.destObj,
+								"value": element.packets});
 				types.add(element.srcType);
 				types.add(element.destType);
 			});
 			var len = Object.keys(nodes).length;
 			var typemap = {}, i = 1;
 			for (let elem of types){
-//				for(var elem in types){
 				typemap[elem] = len+i;
 				i++;
 			}
@@ -170,32 +96,91 @@
 		};
 	};
 
+	var graph = new Graph();
+
+	function clearchart(){
+		document.getElementById("chart").innerHTML = "";
+	};
+
+	function toggle(){
+		var svg = d3.select("svg g");
+		var demoSwitch = {
+		gtX: 350,
+		gtY: 10,
+		id: "deomswitch",
+		swpos: "left",
+		leftTxt: "Traffic",
+		rightTxt: "Packet",
+		label: "Switch between packet and traffic visualization"
+		},
+		switchElement = sP.swtch.newSwtch(demoSwitch, {oW:1,aR:1,oH:1,nW:2,nH:1}); // not passing anything in for pym will default to 1.
+		sP.swtch.renderSwtch(svg, switchElement);
+
+		var switchListener = svg.select("#" + demoSwitch.id)
+			.on("click", function() {
+				sP.swtch.toggleSwitch(svg,demoSwitch, {oW:1,aR:1,oH:1,nW:2,nH:1}) // again not passing any pym info in will default to 1.
+				clearchart();
+					var biHiSankey = d3.biHiSankey();
+					// Set the biHiSankey diagram properties
+					biHiSankey
+					  .nodeWidth(NODE_WIDTH)
+					  .nodeSpacing(10)
+					  .linkSpacing(4)
+					  .arrowheadScaleFactor(0.5) // Specifies that 0.5 of the link's stroke WIDTH should be allowed for the marker at the end of the link.
+					  .size([WIDTH, HEIGHT]);
+				if(demoSwitch.swpos == "right"){
+					biHiSankey
+					  .nodes(graph.nodes)
+					  .links(graph.packetedges)
+					  .layout(LAYOUT_INTERATIONS);
+					disableUserInterractions(2 * TRANSITION_DURATION);
+				} else {
+					biHiSankey
+					  .nodes(graph.nodes)
+					  .links(graph.trafficedges)
+					  .initializeNodes(function (node) {
+							node.state = node.parent ? "contained" : "collapsed";
+					  })
+					  .layout(LAYOUT_INTERATIONS);
+					disableUserInterractions(2 * TRANSITION_DURATION);
+				}
+					update(biHiSankey, res["svg"], res["tooltip"], res["colorScale"], res["highlightColorScale"]);
+			});
+	};
+
     $(df2).on({
         "stateFetchingSuccess": function(event, data) {
-			graph = new Graph();
 			graph.parse(data.result.data);
-
+			clearchart();
+			var res = initialize();
+			var biHiSankey = d3.biHiSankey();
+			// Set the biHiSankey diagram properties
+			biHiSankey
+			  .nodeWidth(NODE_WIDTH)
+			  .nodeSpacing(10)
+			  .linkSpacing(4)
+			  .arrowheadScaleFactor(0.5) // Specifies that 0.5 of the link's stroke WIDTH should be allowed for the marker at the end of the link.
+			  .size([WIDTH, HEIGHT]);
 				biHiSankey
 				  .nodes(graph.nodes)
-				  .links(graph.edges)
+				  .links(graph.trafficedges)
 				  .initializeNodes(function (node) {
 						node.state = node.parent ? "contained" : "collapsed";
 				  })
 				  .layout(LAYOUT_INTERATIONS);
 				disableUserInterractions(2 * TRANSITION_DURATION);
-				update();
-
+				update(biHiSankey, res["svg"], res["tooltip"], res["colorScale"], res["highlightColorScale"]);
+				toggle();
         },
         "stateFetchingFailure": function(event, data) {
 			console.log("failure");
-            addNewEntry($trafficStatusList, JSON.stringify(data.error));
-            addNewEntry($trafficStatusList, "Hit a snag. Retry after 1 sec...");
+            //addNewEntry($trafficStatusList, JSON.stringify(data.error));
+            //addNewEntry($trafficStatusList, "Hit a snag. Retry after 1 sec...");
             setTimeout(function() {
                 $trafficStatusList.html("");
                 df2.repeatOnce();
             }, 1000);
         }
     });
-
     df2.start();
 })();

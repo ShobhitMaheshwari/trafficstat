@@ -2,7 +2,7 @@
 
 //code borrowed from here http://bl.ocks.org/Neilos/584b9a5d44d5fe00f779 and modified it as needed
 
-var svg, tooltip, biHiSankey, path, defs, colorScale, highlightColorScale, isTransitioning;
+var isTransitioning;
 
 var OPACITY = {
     NODE_DEFAULT: 0.9,
@@ -12,7 +12,7 @@ var OPACITY = {
     LINK_FADED: 0.05,
     LINK_HIGHLIGHT: 0.9
   },
-  TYPES = ["A", "B", "C"],
+  TYPES = [],
   TYPE_COLORS = ["#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d"],
   TYPE_HIGHLIGHT_COLORS = ["#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854", "#ffd92f", "#e5c494"],
   LINK_COLOR = "#b3b3b3",
@@ -32,7 +32,7 @@ var OPACITY = {
   },
   TRANSITION_DURATION = 400,
   HEIGHT = 500 - MARGIN.TOP - MARGIN.BOTTOM,
-  WIDTH = 960 - MARGIN.LEFT - MARGIN.RIGHT,
+  WIDTH = 1060 - MARGIN.LEFT - MARGIN.RIGHT,
   LAYOUT_INTERATIONS = 32,
   REFRESH_INTERVAL = 7000;
 
@@ -54,13 +54,13 @@ disableUserInterractions = function (time) {
   }, time);
 },
 
-hideTooltip = function () {
+hideTooltip = function (tooltip) {
   return tooltip.transition()
     .duration(TRANSITION_DURATION)
     .style("opacity", 0);
 },
 
-showTooltip = function () {
+showTooltip = function (tooltip) {
   return tooltip
     .style("left", d3.event.pageX + "px")
     .style("top", d3.event.pageY + 15 + "px")
@@ -69,10 +69,18 @@ showTooltip = function () {
       .style("opacity", 1);
 };
 
-colorScale = d3.scale.ordinal().domain(TYPES).range(TYPE_COLORS),
-highlightColorScale = d3.scale.ordinal().domain(TYPES).range(TYPE_HIGHLIGHT_COLORS),
+//code taken from http://bl.ocks.org/AndrewStaroscik/6cd072b09a909f8ac7c5 and modified as needed
 
-svg = d3.select("#chart").append("svg")
+// AMS sciPri Library: 
+var sP=function(){var t={};return t.niceExp=function(t,e){var n={},e=e||3;return n.raw=1*t,n.rawShort=parseFloat(n.raw.toFixed(e)),n.exp=Math.floor(Math.log(t)/Math.log(10)),n.nForExp=t/Math.pow(10,n.exp),n.nForExpShort=parseFloat(n.nForExp.toFixed(e)),n.nNice=n.nForExpShort+"&#215;10<sup>"+n.exp+"</sup>",n},t.rndToX=function(t,e){return Math.round(t*Math.pow(10,e))/Math.pow(10,e)},t.swtch={renderSwtch:function(t,e){var n,o,r,a=t.append("g").attr("id",e.id).attr("class",e["class"]).attr("swpos",e.swpos).attr("transform","translate("+e.gtX+","+e.gtY+")");for(o=e.elements.length,n=0;o>n;n+=1)r=e.elements[n],"text"===r.type?a.append(r.type).attr(r.attr).style(r.style).text(r.text):a.append(r.type).attr(r.attr).style(r.style)},newSwtch:function(t,e){var e=e||{oW:1,aR:1,oH:1,nW:1,nH:1},n="left"===t.swpos?0:45*e.nW/e.oW,o={"class":"noselect",elements:[{name:"bkgrnd",type:"rect",id:t.id+"bkgrnd",attr:{x:0,y:0,ry:6*e.nH/e.oH,height:30*e.nH/e.oH,width:90*e.nW/e.oW},style:{fill:"#ffffff",stroke:"#232323","stroke-width":1.5*e.nW/e.oW}},{name:"txtleft",type:"text",id:t.id+"txtleft",attr:{x:80*e.nW/e.oW,y:17.5*e.nH/e.oH,"text-anchor":"end","alignment-baseline":"middle","font-size":20+"px"},style:{},text:t.rightTxt},{name:"txtRight",type:"text",id:t.id+"txtRight",attr:{x:10*e.nW/e.oW,y:17.5*e.nH/e.oH,"text-anchor":"start","alignment-baseline":"middle","font-size":20+"px"},style:{},text:t.leftTxt},{name:"tglswtch",type:"rect",id:t.id+"tglswtch",attr:{id:t.id+"swtgl",x:n,y:0,ry:6*e.nH/e.oH,height:30*e.nH/e.oH,width:45*e.nW/e.oW},style:{fill:"rgba(59, 176, 132, .5)",stroke:"#232323","stroke-width":1.5*e.nW/e.oW}},{name:"label",type:"text",id:t.id+"label",attr:{x:0,y:-7*e.nH/e.oH,"text-anchor":"start","alignment-baseline":"middle","font-size":14+"px"},style:{},text:t.label}],gtX:e.nW*t.gtX/e.oW,gtY:e.nH*t.gtY/e.oH,id:t.id,swpos:"left"};return o},toggleSwitch:function(t,e,n){var o=0,n=n||{oW:1,aR:1,oH:1,nW:1,nH:1};"left"===e.swpos?(e.swpos="right",o=45):(e.swpos="left",o=0);t.select("#"+e.id+"swtgl").attr("x",n.nW*o/n.oW)}},t}();
+
+function initialize(){
+
+
+var colorScale = d3.scale.ordinal().domain([]).range(TYPE_COLORS),
+ highlightColorScale = d3.scale.ordinal().domain([]).range(TYPE_HIGHLIGHT_COLORS),
+
+ svg = d3.select("#chart").append("svg")
         .attr("width", WIDTH + MARGIN.LEFT + MARGIN.RIGHT)
         .attr("height", HEIGHT + MARGIN.TOP + MARGIN.BOTTOM)
       .append("g")
@@ -82,25 +90,13 @@ svg.append("g").attr("id", "links");
 svg.append("g").attr("id", "nodes");
 svg.append("g").attr("id", "collapsers");
 
-tooltip = d3.select("#chart").append("div").attr("id", "tooltip");
+var tooltip = d3.select("#chart").append("div").attr("id", "tooltip");
 
 tooltip.style("opacity", 0)
     .append("p")
       .attr("class", "value");
 
-biHiSankey = d3.biHiSankey();
-
-// Set the biHiSankey diagram properties
-biHiSankey
-  .nodeWidth(NODE_WIDTH)
-  .nodeSpacing(10)
-  .linkSpacing(4)
-  .arrowheadScaleFactor(0.5) // Specifies that 0.5 of the link's stroke WIDTH should be allowed for the marker at the end of the link.
-  .size([WIDTH, HEIGHT]);
-
-path = biHiSankey.link().curvature(0.45);
-
-defs = svg.append("defs");
+var defs = svg.append("defs");
 
 defs.append("marker")
   .style("fill", LINK_COLOR)
@@ -141,7 +137,18 @@ defs.append("marker")
   .append("path")
     .attr("d", "M 0 0 L 1 0 L 6 5 L 1 10 L 0 10 z");
 
-function update () {
+	return {
+		"svg": svg,
+		"tooltip": tooltip,
+		"colorScale": colorScale,
+		"highlightColorScale": highlightColorScale
+	}
+
+};
+
+function update (biHiSankey, svg, tooltip, colorScale, highlightColorScale) {
+
+	var path = biHiSankey.link().curvature(0.45);
   var link, linkEnter, node, nodeEnter, collapser, collapserEnter;
 
   function dragmove(node) {
@@ -204,12 +211,12 @@ function update () {
 
   function showHideChildren(node) {
     disableUserInterractions(2 * TRANSITION_DURATION);
-    hideTooltip();
+    hideTooltip(tooltip);
     if (node.state === "collapsed") { expand(node); }
     else { collapse(node); }
 
     biHiSankey.relayout();
-    update();
+    update(biHiSankey, svg, tooltip, colorScale, highlightColorScale);
     link.attr("d", path);
     restoreLinksAndNodes();
   }
@@ -259,7 +266,7 @@ function update () {
 
   linkEnter.on('mouseenter', function (d) {
     if (!isTransitioning) {
-      showTooltip().select(".value").text(function () {
+      showTooltip(tooltip).select(".value").text(function () {
         if (d.direction > 0) {
           return d.source.name + " → " + d.target.name + "\n" + formatNumber(d.value);
         }
@@ -276,7 +283,7 @@ function update () {
 
   linkEnter.on('mouseleave', function () {
     if (!isTransitioning) {
-      hideTooltip();
+      hideTooltip(tooltip);
 
       d3.select(this)
         .style("stroke", LINK_COLOR)
@@ -397,16 +404,15 @@ function update () {
           .style("opacity", 1).select(".value")
           .text(function () {
             var additionalInstructions = g.children.length ? "\n(Double click to expand)" : "";
-			console.log(g);
-            return g.name + "\nInflow: " + d3.sum(visible(g.targetLinks), function(link){return link.value;})
-							+ " Outflow: " + d3.sum(visible(g.sourceLinks), function(link){return link.value;}) + additionalInstructions;
+            return g.name + "\nInflow: " + d3.sum(visible(g.targetLinks),   function value(link) {return link.value;})
+							+ " Outflow: " + d3.sum(visible(g.sourceLinks),   function value(link) {return link.value;}) + additionalInstructions;
           });
     }
   });
 
   node.on("mouseleave", function () {
     if (!isTransitioning) {
-      hideTooltip();
+      hideTooltip(tooltip);
       restoreLinksAndNodes();
     }
   });
@@ -471,7 +477,7 @@ function update () {
 
   collapser.on("mouseenter", function (g) {
     if (!isTransitioning) {
-      showTooltip().select(".value")
+      showTooltip(tooltip).select(".value")
         .text(function () {
           return g.name + "\n(Double click to collapse)";
         });
@@ -493,7 +499,7 @@ function update () {
 
   collapser.on("mouseleave", function (g) {
     if (!isTransitioning) {
-      hideTooltip();
+      hideTooltip(tooltip);
       d3.select(this)
         .style("opacity", OPACITY.NODE_DEFAULT)
         .select("circle")
@@ -510,24 +516,3 @@ function update () {
   collapser.exit().remove();
 
 }
-/*
-d3.queue()
-.defer(d3.json, "examplenodes.json")
-.defer(d3.json, "examplelinks.json")
-.await(function (error, exampleNodes, exampleLinks) {
-//	console.log(exampleNodes);
-//	console.log(exampleLinks);
-	biHiSankey
-	  .nodes(exampleNodes)
-	  .links(exampleLinks)
-	  .initializeNodes(function (node) {
-    		node.state = node.parent ? "contained" : "collapsed";
-	  })
-	  .layout(LAYOUT_INTERATIONS);
-
-	disableUserInterractions(2 * TRANSITION_DURATION);
-
-	update();
-});
-
-*/
