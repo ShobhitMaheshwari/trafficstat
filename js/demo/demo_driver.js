@@ -60,17 +60,17 @@
 	function Graph(){
 		this.parse = function(data){
 			var nodes = {};
-			var graph = this;
-			graph.trafficedges = [];
-			graph.packetedges = [];
+			var thisgraph = this;
+			thisgraph.trafficedges = [];
+			thisgraph.packetedges = [];
 			var types = new Set();
 			data.forEach(function(element){
 				nodes[element.srcObj] = element.srcType;
 				nodes[element.destObj] = element.destType;
-				graph.trafficedges.push({"source": element.srcObj,
+				thisgraph.trafficedges.push({"source": element.srcObj,
 								"target": element.destObj,
 								"value": element.traffic});
-				graph.packetedges.push({"source": element.srcObj,
+				thisgraph.packetedges.push({"source": element.srcObj,
 								"target": element.destObj,
 								"value": element.packets});
 				types.add(element.srcType);
@@ -99,8 +99,12 @@
 	var graph = new Graph();
 	var graph2;
 
+	var res = initialize();
+
 	function clearchart(){
-		document.getElementById("chart").innerHTML = "";
+		document.getElementById("links").innerHTML = "";
+		document.getElementById("nodes").innerHTML = "";
+		document.getElementById("collapsers").innerHTML = "";
 	};
 
 	function toggle(){
@@ -121,7 +125,6 @@
 			.on("click", function() {
 				sP.swtch.toggleSwitch(svg,demoSwitch, {oW:1,aR:1,oH:1,nW:2,nH:1}) // again not passing any pym info in will default to 1.
 				clearchart();
-				var res = initialize();
 				var biHiSankey = d3.biHiSankey();
 				// Set the biHiSankey diagram properties
 				biHiSankey
@@ -130,10 +133,11 @@
 				  .linkSpacing(4)
 				  .arrowheadScaleFactor(0.5) // Specifies that 0.5 of the link's stroke WIDTH should be allowed for the marker at the end of the link.
 				  .size([WIDTH, HEIGHT]);
+				var tempgraph = jQuery.extend(true, {}, graph2);
 				if(demoSwitch.swpos == "right"){
 					biHiSankey
-					  .nodes(graph2.nodes)
-					  .links(graph2.packetedges)
+					  .nodes(tempgraph.nodes)
+					  .links(tempgraph.packetedges)
 					  .initializeNodes(function (node) {
 							node.state = node.parent ? "contained" : "collapsed";
 					  })
@@ -141,8 +145,8 @@
 					disableUserInterractions(2 * TRANSITION_DURATION);
 				} else {
 					biHiSankey
-					  .nodes(graph2.nodes)
-					  .links(graph2.trafficedges)
+					  .nodes(tempgraph.nodes)
+					  .links(tempgraph.trafficedges)
 					  .initializeNodes(function (node) {
 							node.state = node.parent ? "contained" : "collapsed";
 					  })
@@ -153,12 +157,13 @@
 			});
 	};
 
+
     $(df2).on({
         "stateFetchingSuccess": function(event, data) {
 			graph.parse(data.result.data);
 			graph2 = jQuery.extend(true, {}, graph);
 			clearchart();
-			var res = initialize();
+
 			var biHiSankey = d3.biHiSankey();
 			// Set the biHiSankey diagram properties
 			biHiSankey
