@@ -93,18 +93,30 @@
 					this.nodes.push({"type" : type, "id" : typemap[type], "parent" : null, "name" : type});
 				}
 			}
+			this.types = Array.from(types);
 		};
 	};
 
 	var graph = new Graph();
 	var graph2;
-
 	var res = initialize();
 
 	function clearchart(){
 		document.getElementById("links").innerHTML = "";
 		document.getElementById("nodes").innerHTML = "";
 		document.getElementById("collapsers").innerHTML = "";
+	};
+
+	function create_biHiSankey(){
+					var biHiSankey = d3.biHiSankey();
+			// Set the biHiSankey diagram properties
+			biHiSankey
+			  .nodeWidth(NODE_WIDTH)
+			  .nodeSpacing(10)
+			  .linkSpacing(4)
+			  .arrowheadScaleFactor(0.5) // Specifies that 0.5 of the link's stroke WIDTH should be allowed for the marker at the end of the link.
+			  .size([WIDTH, HEIGHT]);
+		return biHiSankey;
 	};
 
 	function toggle(){
@@ -125,15 +137,11 @@
 			.on("click", function() {
 				sP.swtch.toggleSwitch(svg,demoSwitch, {oW:1,aR:1,oH:1,nW:2,nH:1}) // again not passing any pym info in will default to 1.
 				clearchart();
-				var biHiSankey = d3.biHiSankey();
-				// Set the biHiSankey diagram properties
-				biHiSankey
-				  .nodeWidth(NODE_WIDTH)
-				  .nodeSpacing(10)
-				  .linkSpacing(4)
-				  .arrowheadScaleFactor(0.5) // Specifies that 0.5 of the link's stroke WIDTH should be allowed for the marker at the end of the link.
-				  .size([WIDTH, HEIGHT]);
+				var biHiSankey = create_biHiSankey();
 				var tempgraph = jQuery.extend(true, {}, graph2);
+				var colorScale = d3.scale.ordinal().domain(tempgraph.types).range(TYPE_COLORS);
+ 				var highlightColorScale = d3.scale.ordinal().domain(tempgraph.types).range(TYPE_HIGHLIGHT_COLORS);
+
 				if(demoSwitch.swpos == "right"){
 					biHiSankey
 					  .nodes(tempgraph.nodes)
@@ -143,6 +151,7 @@
 					  })
 					  .layout(LAYOUT_INTERATIONS);
 					disableUserInterractions(2 * TRANSITION_DURATION);
+					update(biHiSankey, res["svg"], res["tooltip"], colorScale, highlightColorScale, "packets");
 				} else {
 					biHiSankey
 					  .nodes(tempgraph.nodes)
@@ -152,26 +161,19 @@
 					  })
 					  .layout(LAYOUT_INTERATIONS);
 					disableUserInterractions(2 * TRANSITION_DURATION);
+					update(biHiSankey, res["svg"], res["tooltip"], colorScale, highlightColorScale, "Mb/s");
 				}
-					update(biHiSankey, res["svg"], res["tooltip"], res["colorScale"], res["highlightColorScale"]);
+
+
 			});
 	};
-
 
     $(df2).on({
         "stateFetchingSuccess": function(event, data) {
 			graph.parse(data.result.data);
 			graph2 = jQuery.extend(true, {}, graph);
 			clearchart();
-
-			var biHiSankey = d3.biHiSankey();
-			// Set the biHiSankey diagram properties
-			biHiSankey
-			  .nodeWidth(NODE_WIDTH)
-			  .nodeSpacing(10)
-			  .linkSpacing(4)
-			  .arrowheadScaleFactor(0.5) // Specifies that 0.5 of the link's stroke WIDTH should be allowed for the marker at the end of the link.
-			  .size([WIDTH, HEIGHT]);
+				var biHiSankey = create_biHiSankey();
 				biHiSankey
 				  .nodes(graph.nodes)
 				  .links(graph.trafficedges)
@@ -180,7 +182,9 @@
 				  })
 				  .layout(LAYOUT_INTERATIONS);
 				disableUserInterractions(2 * TRANSITION_DURATION);
-				update(biHiSankey, res["svg"], res["tooltip"], res["colorScale"], res["highlightColorScale"]);
+				var colorScale = d3.scale.ordinal().domain(graph.types).range(TYPE_COLORS);
+ 				var highlightColorScale = d3.scale.ordinal().domain(graph.types).range(TYPE_HIGHLIGHT_COLORS);
+				update(biHiSankey, res["svg"], res["tooltip"], colorScale, highlightColorScale, "Mb/s");
 				toggle();
         },
         "stateFetchingFailure": function(event, data) {

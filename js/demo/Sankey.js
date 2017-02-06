@@ -72,10 +72,7 @@ var sP=function(){var t={};return t.niceExp=function(t,e){var n={},e=e||3;return
 function initialize(){
 
 
-var colorScale = d3.scale.ordinal().domain([]).range(TYPE_COLORS),
- highlightColorScale = d3.scale.ordinal().domain([]).range(TYPE_HIGHLIGHT_COLORS),
-
- svg = d3.select("#chart").append("svg")
+var svg = d3.select("#chart").append("svg")
         .attr("width", WIDTH + MARGIN.LEFT + MARGIN.RIGHT)
         .attr("height", HEIGHT + MARGIN.TOP + MARGIN.BOTTOM)
       .append("g")
@@ -134,14 +131,12 @@ defs.append("marker")
 
 	return {
 		"svg": svg,
-		"tooltip": tooltip,
-		"colorScale": colorScale,
-		"highlightColorScale": highlightColorScale
+		"tooltip": tooltip
 	}
 
 };
 
-function update (biHiSankey, svg, tooltip, colorScale, highlightColorScale) {
+function update (biHiSankey, svg, tooltip, colorScale, highlightColorScale, units) {
 
 	var path = biHiSankey.link().curvature(0.45);
   var link, linkEnter, node, nodeEnter, collapser, collapserEnter;
@@ -211,7 +206,7 @@ function update (biHiSankey, svg, tooltip, colorScale, highlightColorScale) {
     else { collapse(node); }
 
     biHiSankey.relayout();
-    update(biHiSankey, svg, tooltip, colorScale, highlightColorScale);
+    update(biHiSankey, svg, tooltip, colorScale, highlightColorScale, units);
     link.attr("d", path);
     restoreLinksAndNodes();
   }
@@ -263,9 +258,9 @@ function update (biHiSankey, svg, tooltip, colorScale, highlightColorScale) {
     if (!isTransitioning) {
       showTooltip(tooltip).select(".value").text(function () {
         if (d.direction > 0) {
-          return d.source.name + " → " + d.target.name + "\n" + formatNumber(d.value);
+          return d.source.name + " → " + d.target.name + "\n" + formatNumber(d.value) + " "+units;
         }
-        return d.target.name + " ← " + d.source.name + "\n" + formatNumber(d.value);
+        return d.target.name + " ← " + d.source.name + "\n" + formatNumber(d.value) + " "+units;
       });
 
       d3.select(this)
@@ -399,8 +394,8 @@ function update (biHiSankey, svg, tooltip, colorScale, highlightColorScale) {
           .style("opacity", 1).select(".value")
           .text(function () {
             var additionalInstructions = g.children.length ? "\n(Double click to expand)" : "";
-            return g.name + "\nInflow: " + d3.sum(visible(g.targetLinks),   function value(link) {return link.value;})
-							+ " Outflow: " + d3.sum(visible(g.sourceLinks),   function value(link) {return link.value;}) + additionalInstructions;
+            return g.name + "\nInflow: " + d3.sum(visible(g.targetLinks),   function value(link) {return link.value;}) + " "+units+" "
+							+ " Outflow: " + d3.sum(visible(g.sourceLinks),   function value(link) {return link.value;}) + " "+ units + " "+ additionalInstructions;
           });
     }
   });
