@@ -247,7 +247,7 @@
 		swpos: "left",
 		leftTxt: "Traffic",
 		rightTxt: "Packet",
-		label: "Switch between packet and traffic visualization"
+		label: "Switch between traffic and packet visualization"
 		},
 		switchElement = sP.swtch.newSwtch(demoSwitch, {oW:1,aR:1,oH:1,nW:2,nH:1}); // not passing anything in for pym will default to 1.
 		sP.swtch.renderSwtch(svg, switchElement);
