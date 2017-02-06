@@ -1,7 +1,0 @@
-[
-  {"source": 3, "target": 2, "value": 20},
-  {"source": 2, "target": 3, "value": 90},
-  {"source": 3, "target": 6, "value": 40},
-  {"source": 6, "target": 2, "value": 70},
-  {"source": 6, "target": 3, "value": 10}
-]

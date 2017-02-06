@@ -1,8 +1,0 @@
-[
-  {"type" : "A", "id" : 1, "parent" : null, "name" : "Node 1"},
-  {"type" : "A", "id" : 2, "parent" : "1", "name" : "Node 2"},
-  {"type" : "A", "id" : 3, "parent" : "1", "name" : "Node 3"},
-  {"type" : "B", "id" : 4, "parent" : null, "name" : "Node 4"},
-  {"type" : "B", "id" : 5, "parent" : "4", "name" : "Node 5"},
-  {"type" : "C", "id" : 6, "parent" : "5", "name" : "Node 6"}
-]
